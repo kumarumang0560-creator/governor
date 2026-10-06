@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adda GS Online Mock Test Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 select-none">
+
+    <!-- PHASE 1: ENTRY SCREEN -->
+    <div id="phase1" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl max-w-md w-full border border-slate-200">
+            <div class="text-center mb-6">
+                <div class="bg-blue-900 text-white p-3 rounded-lg font-bold text-xl tracking-wide mb-2">ADDA GS QUIZ PORTAL</div>
+                <h1 class="text-lg font-bold text-slate-700">आधुनिक इतिहास: गवर्नर जनरल एवं भू-राजस्व</h1>
+                <p class="text-xs text-slate-500 mt-1">लुसेंट होमवर्क टेस्ट | कुल प्रश्न: 50 | समय: 60 मिनट</p>
+            </div>
+            <form id="entryForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">पूरा नाम (Full Name)</label>
+                    <input type="text" id="studentName" required class="w-full px-4 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none" placeholder="उदाहरण: मनीष महाजन">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">रोल नंबर (Roll Number)</label>
+                    <input type="text" id="rollNumber" required class="w-full px-4 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none" placeholder="उदाहरण: 100125">
+                </div>
+                <button type="submit" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-lg text-sm shadow-md transition-all">आगे बढ़ें (Proceed)</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PHASE 2: INSTRUCTIONS SCREEN -->
+    <div id="phase2" class="hidden min-h-screen p-4 sm:p-8 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden">
+            <div class="bg-blue-900 text-white p-4 font-bold text-lg flex justify-between items-center">
+                <span>परीक्षा निर्देश (Exam Instructions)</span>
+                <span class="text-xs bg-yellow-500 text-black px-2 py-1 rounded font-semibold">50 MCQs</span>
+            </div>
+            <div class="p-6 space-y-4 text-sm text-slate-700">
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 grid grid-cols-2 gap-2 text-xs sm:text-sm">
+                    <div><strong>परीक्षार्थी (Candidate):</strong> <span id="dispName" class="text-blue-900 font-bold"></span></div>
+                    <div><strong>रोल नंबर (Roll No):</strong> <span id="dispRoll" class="text-blue-900 font-bold"></span></div>
+                </div>
+                <div class="space-y-2 border-l-4 border-blue-900 pl-4 py-1">
+                    <h3 class="font-bold text-slate-900">महत्वपूर्ण नियम एवं शर्तें:</h3>
+                    <ul class="list-disc list-inside space-y-1 text-xs sm:text-sm text-slate-600">
+                        <li>परीक्षा की कुल अवधि <strong>60 मिनट</strong> है।</li>
+                        <li>प्रत्येक प्रश्न हेतु <strong>1 मिनट 12 सेकंड</strong> का आनुपातिक समय निर्धारित है।</li>
+                        <li>प्रत्येक सही उत्तर के लिए 1 अंक मिलेगा, कोई नकारात्मक अंकन नहीं है।</li>
+                        <li>सफलता के लिए न्यूनतम उत्तीर्णांक अंक <strong>70%</strong> निर्धारित है।</li>
+                        <li>भाषा बदलने के लिए ऊपर दाईं ओर दिए गए "हिंदी | Eng" बटन का प्रयोग करें।</li>
+                    </ul>
+                </div>
+                <button id="startTestBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg text-sm shadow-md transition-all mt-4">परीक्षा प्रारंभ करें (Start Test)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHASE 3: LIVE MOCK TEST ENGINE -->
+    <div id="phase3" class="hidden flex flex-col h-screen overflow-hidden">
+        <!-- Top Nav Bar -->
+        <header class="bg-blue-900 text-white h-14 px-4 flex justify-between items-center shrink-0 shadow-md">
+            <div class="flex items-center space-x-2">
+                <span class="text-xs sm:text-sm font-semibold tracking-wide">Overall:</span>
+                <span id="overallTimer" class="font-mono font-bold text-yellow-300 text-sm sm:text-base">01:00:00</span>
+            </div>
+            <div class="bg-yellow-500 text-slate-900 px-3 py-1 rounded-md font-bold text-xs sm:text-sm flex items-center space-x-1 shadow">
+                <span>Q Timer:</span>
+                <span id="questionTimer" class="font-mono">01:12</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button id="langToggleBtn" class="bg-blue-800 hover:bg-blue-700 text-xs px-2.5 py-1.5 rounded border border-blue-600 font-semibold transition">हिंदी | Eng</button>
+                <button id="drawerToggleBtn" class="bg-blue-800 hover:bg-blue-700 p-1.5 rounded border border-blue-600 sm:hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Body -->
+        <div class="flex flex-1 overflow-hidden relative">
+            <!-- Question Box Container -->
+            <main class="flex-1 p-4 sm:p-6 overflow-y-auto custom-scrollbar flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center border-b pb-2 mb-4">
+                        <span id="qIndexDisp" class="font-bold text-blue-900 text-base sm:text-lg">Question 1 of 50</span>
+                        <span class="text-xs text-slate-500 bg-slate-200 px-2 py-1 rounded">Single Choice MCQ</span>
+                    </div>
+                    <div id="qText" class="text-sm sm:text-base font-medium text-slate-800 mb-6 leading-relaxed"></div>
+                    <div id="qGraphic" class="mb-4"></div>
+                    <div id="optionsContainer" class="space-y-3"></div>
+                </div>
+            </main>
+
+            <!-- Side Palette Drawer Unit -->
+            <aside id="paletteDrawer" class="absolute sm:relative right-0 top-0 h-full w-72 bg-white border-l border-slate-200 flex flex-col transition-transform duration-300 transform translate-x-full sm:translate-x-0 z-20 shadow-lg sm:shadow-none">
+                <div class="p-3 bg-slate-100 font-bold text-xs text-slate-700 border-b flex justify-between items-center">
+                    <span>Question Palette</span>
+                    <button id="closeDrawerBtn" class="sm:hidden text-slate-500 hover:text-slate-700 font-bold">✕</button>
+                </div>
+                <div class="p-3 grid grid-cols-2 gap-2 text-xs border-b bg-white">
+                    <div class="flex items-center space-x-1.5"><span class="w-3.5 h-3.5 bg-green-500 rounded-sm inline-block"></span><span>Answered</span></div>
+                    <div class="flex items-center space-x-1.5"><span class="w-3.5 h-3.5 bg-red-500 rounded-sm inline-block"></span><span>Not Answered</span></div>
+                    <div class="flex items-center space-x-1.5"><span class="w-3.5 h-3.5 bg-purple-600 rounded-sm inline-block"></span><span>Review</span></div>
+                    <div class="flex items-center space-x-1.5"><span class="w-3.5 h-3.5 bg-slate-300 rounded-sm inline-block"></span><span>Not Visited</span></div>
+                </div>
+                <div id="paletteGrid" class="flex-1 p-3 grid grid-cols-5 gap-2 overflow-y-auto custom-scrollbar auto-rows-max"></div>
+            </aside>
+        </div>
+
+        <!-- Fixed Bottom Mobile Controls -->
+        <footer class="bg-white border-t border-slate-200 p-2 sm:p-3 flex flex-col space-y-2 shrink-0">
+            <div class="flex space-x-2">
+                <button id="markReviewBtn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-semibold py-2 rounded shadow transition">Mark for Review & Next</button>
+                <button id="saveNextBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm font-semibold py-2 rounded shadow transition">Save & Next</button>
+            </div>
+            <div class="flex justify-between items-center pt-1 px-1">
+                <div class="flex space-x-4 text-xs sm:text-sm font-semibold">
+                    <button id="prevBtn" class="text-blue-900 hover:underline">← Previous</button>
+                    <button id="clearBtn" class="text-red-600 hover:underline">Clear Response</button>
+                </div>
+                <button id="submitTestBtn" class="bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded shadow transition">Submit Test</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- PHASE 4: RESULT DASHBOARD & REVISION SYSTEM -->
+    <div id="phase4" class="hidden min-h-screen bg-slate-50 p-4 sm:p-8">
+        <div class="max-w-4xl mx-auto space-y-6">
+            <!-- Score Card Dashboard -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                <h2 class="text-xl font-bold text-slate-800 border-b pb-3 mb-4">Exam Performance Summary</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 text-center">
+                        <div class="text-xs text-slate-500 font-semibold">Total Score</div>
+                        <div id="scoreVal" class="text-2xl font-bold text-blue-900">0 / 50</div>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded-lg border border-green-100 text-center">
+                        <div class="text-xs text-slate-500 font-semibold">Correct</div>
+                        <div id="correctVal" class="text-2xl font-bold text-green-600">0</div>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-lg border border-red-100 text-center">
+                        <div class="text-xs text-slate-500 font-semibold">Incorrect</div>
+                        <div id="wrongVal" class="text-2xl font-bold text-red-600">0</div>
+                    </div>
+                    <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100 text-center">
+                        <div class="text-xs text-slate-500 font-semibold">Percentage</div>
+                        <div id="percentVal" class="text-2xl font-bold text-yellow-700">0%</div>
+                    </div>
+                </div>
+                <div id="statusBadge" class="text-center py-2 rounded-lg font-bold text-sm mb-4"></div>
+                <button id="downloadPdfBtn" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-2.5 rounded-lg text-sm shadow transition flex items-center justify-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Download Question-Answer Solutions PDF</span>
+                </button>
+            </div>
+
+            <!-- Quiz Leaderboard System -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                <h3 class="text-lg font-bold text-slate-800 border-b pb-3 mb-4">Quiz Leaderboard (Top 50 Candidates)</h3>
+                <div class="overflow-x-auto max-h-80 custom-scrollbar">
+                    <table class="w-full text-left text-xs sm:text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 border-b text-slate-700">
+                                <th class="p-2.5 font-bold">Rank</th>
+                                <th class="p-2.5 font-bold">Student Name</th>
+                                <th class="p-2.5 font-bold">Score</th>
+                                <th class="p-2.5 font-bold">Time Taken</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Detailed Solutions Container for PDF Export -->
+            <div id="pdfContent" class="bg-white p-6 rounded-xl shadow-lg border border-slate-200 space-y-6">
+                <div class="border-b pb-4 text-center">
+                    <h2 class="text-xl font-bold text-blue-900">Adda GS - Detailed Question Solutions</h2>
+                    <p class="text-xs text-slate-500">आधुनिक इतिहास: गवर्नर जनरल एवं भू-राजस्व (1 से 50 प्रश्न हल सहित)</p>
+                </div>
+                <div id="solutionsList" class="space-y-6"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DATASET: ALL 50 QUESTIONS DIRECTLY PARSED FROM PDF SOURCE
+        const rawDataset = [
+            { id: 1, qHi: "थॉमस मुनरो ने मद्रास का गवर्नर बनने के बाद संपूर्ण मद्रास प्रेसीडेंसी में रैयतवाड़ी व्यवस्था कब विधिवत लागू की?", qEn: "When did Thomas Munro formally implement the Ryotwari system across the entire Madras Presidency after becoming its Governor?", optsHi: ["1835 ई. में", "1793 ई. में", "1820 ई. में", "1805 ई. में"], optsEn: ["1835 AD", "1793 AD", "1820 AD", "1805 AD"], ans: 2, expHi: "सर थॉमस मुनरो ने 1820 में मद्रास का गवर्नर बनने के बाद पूरी प्रेसीडेंसी में रैयतवाड़ी व्यवस्था को औपचारिक रूप से लागू किया।", expEn: "Sir Thomas Munro formally implemented the Ryotwari system in 1820 after becoming Governor of Madras." },
+            { id: 2, qHi: "बंगाल काश्तकारी अधिनियम (बंगाल टेनेंसी एक्ट) 1885 के संदर्भ में कौन सही है?<br>1. यह किसानों को बेदखली से सुरक्षा प्रदान करने हेतु पारित किया गया था।<br>2. इसने रैयतों के जमीन पर दखलकारी अधिकारों को मान्यता दी।", qEn: "Which is correct regarding the Bengal Tenancy Act 1885?<br>1. Passed to protect peasants from eviction.<br>2. Recognized occupancy rights of Ryots.", optsHi: ["इनमें से कोई नहीं", "1 और 2 दोनों", "केवल 1", "केवल 2"], optsEn: ["None of these", "Both 1 and 2", "Only 1", "Only 2"], ans: 1, expHi: "पाबना विद्रोह के दबाव में 1885 में पारित इस कानून ने किसानों के भूमि अधिकारों को सुरक्षा और जमींदारों की मनमानी पर रोक लगाई।", expEn: "Passed under pressure from the Pabna revolt, this law protected tenancy rights and restricted landlord arbitrariness." },
+            { id: 3, qHi: "निम्नलिखित में से कौन-सा युग्म गलत है?", qEn: "Which of the following pairs is incorrect?", optsHi: ["विलियम डिग्बी - 'प्रॉस्परस ब्रिटिश इंडिया'", "लॉर्ड कर्जन - स्थायी बंदोबस्त के जनक", "आर.सी. दत्त - 'इकोनॉमिक हिस्ट्री ऑफ इंडिया'", "दादाभाई नौरोजी - धन की निकासी का सिद्धांत"], optsEn: ["William Digby - 'Prosperous British India'", "Lord Curzon - Father of Permanent Settlement", "R.C. Dutt - 'Economic History of India'", "Dadabhai Naoroji - Drain of Wealth Theory"], ans: 1, expHi: "स्थायी बंदोबस्त के जनक लॉर्ड कॉर्नवालिस थे; लॉर्ड कर्जन 1899 से 1905 तक भारत के वायसराय रहे थे।", expEn: "Lord Cornwallis was the father of Permanent Settlement; Lord Curzon was Viceroy from 1899 to 1905." },
+            { id: 4, qHi: "महालवाड़ी व्यवस्था में भू-राजस्व का निर्धारण किस आधार पर किया जाता था?", qEn: "On what basis was land revenue assessed under the Mahalwari system?", optsHi: ["केवल प्रत्येक किसान के वजन के आधार पर", "केवल लंदन के बाजार भाव के आधार पर", "संपूर्ण महाल (गांव) के समस्त खेतों के अनुमानित कुल उत्पादन के आधार पर", "वर्षा की मात्रा की दैनिक गिनती पर"], optsEn: ["Based on individual farmer's weight", "Based on London market prices", "Based on estimated total production of all fields in the whole Mahal (village)", "Based on daily rainfall count"], ans: 2, expHi: "महालवाड़ी में पूरे गांव (महाल) की कुल कृषि भूमि और संभावित उत्पादकता का मूल्यांकन करके लगान निश्चित किया जाता था।", expEn: "Assessment was fixed based on total land and estimated yield of the entire village (Mahal)." },
+            { id: 5, qHi: "भू-राजस्व प्रणालियों के प्रवर्तकों के संदर्भ में सही क्रम कौन-सा है?", qEn: "What is the correct chronological sequence of originators of land revenue systems?", optsHi: ["कॉर्नवालिस → हॉल्ट मैकेंजी → मुनरो", "हॉल्ट मैकेंजी → मुनरो → कॉर्नवालिस", "मुनरो → कॉर्नवालिस → हॉल्ट मैकेंजी", "लॉर्ड कॉर्नवालिस (स्थायी) → अलेक्जेंडर रीड व मुनरो (रैयतवाड़ी) → हॉल्ट मैकेंजी (महालवाड़ी)"], optsEn: ["Cornwallis → Holt Mackenzie → Munro", "Holt Mackenzie → Munro → Cornwallis", "Munro → Cornwallis → Holt Mackenzie", "Lord Cornwallis (Permanent) → Read & Munro (Ryotwari) → Holt Mackenzie (Mahalwari)"], ans: 3, expHi: "स्थायी बंदोबस्त कॉर्नवालिस (1793), रैयतवाड़ी रीड व मुनरो (1792-1820) और महालवाड़ी हॉल्ट मैकेंजी (1822) से संबंधित हैं।", expEn: "Permanent Settlement: Cornwallis (1793); Ryotwari: Read & Munro (1792-1820); Mahalwari: Holt Mackenzie (1822)." },
+            { id: 6, qHi: "स्थायी बंदोबस्त को व्यावहारिक रूप देने और योजना तैयार करने में कॉर्नवालिस के साथ किस ब्रिटिश अधिकारी का मुख्य योगदान था?", qEn: "Which British official contributed significantly alongside Cornwallis in planning the Permanent Settlement?", optsHi: ["सर जॉन शोर", "जेम्स ग्रांट", "हॉल्ट मैकेंजी", "चार्ल्स मेटकाफ"], optsEn: ["Sir John Shore", "James Grant", "Holt Mackenzie", "Charles Metcalfe"], ans: 0, expHi: "सर जॉन शोर ने इस व्यवस्था की विस्तृत योजना बनाई थी और जमींदारों को भूमि का वास्तविक स्वामी स्वीकार करने का समर्थन किया था।", expEn: "Sir John Shore planned the scheme and advocated treating zamindars as land owners." },
+            { id: 7, qHi: "कथन (A): रैयतवाड़ी व्यवस्था में किसानों को अपनी भूमि बेचने, गिरवी रखने और पट्टे पर देने का अधिकार प्राप्त था।<br>कारण (R): जब तक किसान नियमित लगान चुकाता रहता था, उसे भूमि से बेदखल नहीं किया जा सकता था।", qEn: "Assertion (A): Farmers had rights to sell, mortgage, and lease land under Ryotwari.<br>Reason (R): Farmers could not be evicted as long as they paid regular revenue.", optsHi: ["A सही हैं किंतु R गलत हैं", "A और R दोनों सही हैं और R, A का सही स्पष्टीकरण नहीं हैं", "A गलत हैं किंतु R सही हैं", "A और R दोनों सही हैं और R, A का सही स्पष्टीकरण हैं"], optsEn: ["A is true but R is false", "Both A & R are true, R is not correct explanation", "A is false but R is true", "Both A & R are true, and R is correct explanation of A"], ans: 3, expHi: "रैयतों को भूमि का पट्टा दिया गया था और लगान चुकाने की शर्त पर उन्हें भूमि हस्तांतरण, बिक्री और रेहन का पूरा हक प्राप्त था।", expEn: "Peasants received title deeds and maintained transfer/mortgage rights subject to timely revenue payment." },
+            { id: 8, qHi: "कथन (A): स्थायी बंदोबस्त से ब्रिटिश ईस्ट इंडिया कंपनी को एक निष्ठावान जमींदार वर्ग का राजनीतिक समर्थन प्राप्त हुआ।<br>कारण (R): कंपनी ने जमींदारों को भूमि का स्थायी स्वामी बनाकर उनके आर्थिक हितों को अपने साथ जोड़ दिया था।", qEn: "Assertion (A): Permanent Settlement secured political backing of a loyal landlord class for East India Company.<br>Reason (R): By granting permanent ownership, the company tied landlord financial interests with its own.", optsHi: ["(A) और (R) दोनों सही हैं, परंतु (R), (A) की सही व्याख्या नहीं करता है।", "(A) गलत है, परंतु (R) सही है।", "(A) और (R) दोनों सही हैं तथा (R), (A) की सही व्याख्या करता है।", "(A) सही है, परंतु (R) गलत है।"], optsEn: ["Both A & R are correct, but R does not explain A", "A is false, R is true", "Both A & R are correct, and R correctly explains A", "A is true, R is false"], ans: 2, expHi: "कॉर्नवालिस का मुख्य राजनीतिक उद्देश्य एक ऐसा धनी वफादार जमींदार वर्ग बनाना था जो 1857 जैसे संकटों में ब्रिटिश राज के साथ रहे।", expEn: "Cornwallis aimed to create a loyal wealthy zamindar class supportive during crises like 1857." },
+            { id: 9, qHi: "कौन-सा कथन सही है?", qEn: "Which of the following statements is correct?", optsHi: ["महालवाड़ी में कर की दर केवल 5% रखी गई थी।", "महालवाड़ी में भूमि का कोई नक्शा या रजिस्टर नहीं बनाया जाता था।", "महालवाड़ी में किसान सीधे कलकत्ता जाकर कर जमा करते थे।", "महालवाड़ी व्यवस्था में लगान अदायगी के लिए पूरा ग्राम समुदाय संयुक्त रूप से उत्तरदायी होता था।"], optsEn: ["Tax rate was only 5% in Mahalwari", "No land maps or registers were made in Mahalwari", "Farmers deposited tax directly in Calcutta in Mahalwari", "Entire village community was jointly responsible for paying revenue in Mahalwari"], ans: 3, expHi: "महालवाड़ी व्यवस्था की प्रमुख विशेषता यह थी कि पूरा गांव या महाल सामूहिक और संयुक्त रूप से लगान भुगतान के लिए उत्तरदायी था।", expEn: "The key trait of Mahalwari was collective and joint responsibility of the entire village community for revenue." },
+            { id: 10, qHi: "निम्नलिखित में से कौन-सा युग्म गलत है?", qEn: "Which of the following pairs is incorrect?", optsHi: ["महाल - व्यक्तिगत किसान की निजी जोत", "सूर्यास्त कानून - निर्दिष्ट तिथि के सूर्यास्त तक कर न देने पर जमींदारी की नीलामी", "लंबरदार - महालवाड़ी व्यवस्था में कर वसूलने वाला मुखिया", "पट्टा और कबूलियत - किसानों और सरकार के बीच समझौता पत्र"], optsEn: ["Mahal - Individual farmer's personal holding", "Sunset Law - Auction of zamindari if tax unpaid by sunset of fixed date", "Lambardar - Headman collecting tax in Mahalwari", "Patta and Qabuliyat - Agreement documents between peasants & government"], ans: 0, expHi: "महाल का अर्थ व्यक्तिगत किसान की जोत नहीं बल्कि पूरा गांव, ग्राम समूह या जागीर संपदा होता था जो कर की एक इकाई थी।", expEn: "Mahal refers to an entire village or group of villages acting as a revenue unit, not individual holdings." },
+            { id: 11, qHi: "प्रमुख कृषक विद्रोहों और उनसे जुड़ी भू-राजस्व पृष्ठभूमि का सही मिलान पहचानिए:<br>(i) पाबना विद्रोह (1873) -> जमींदारों की मनमानी लगान वृद्धि और बेदखली के विरुद्ध<br>(ii) दक्कन उपद्रव (1875) -> रैयतवाड़ी क्षेत्र में साहूकारों के बांडों के विरुद्ध", qEn: "Identify correct pairing of peasant revolts and revenue background:<br>(i) Pabna Revolt (1873) -> Against illegal rent hikes & evictions by zamindars<br>(ii) Deccan Riots (1875) -> Against moneylender debt bonds in Ryotwari areas", optsHi: ["केवल 1", "1 और 2 दोनों", "इनमें से कोई नहीं", "केवल 2"], optsEn: ["Only 1", "Both 1 and 2", "None of these", "Only 2"], ans: 1, expHi: "पाबना विद्रोह बंगाल के काश्तकारों द्वारा जमींदारी शोषण के विरुद्ध था और दक्कन उपद्रव महाराष्ट्र में मारवाड़ी साहूकारों के खिलाफ था।", expEn: "Pabna revolt targeted landlord extortion in Bengal, while Deccan riots resisted moneylenders in Maharashtra." },
+            { id: 12, qHi: "भू-राजस्व व्यवस्थाओं के संदर्भ में कौन सही है?<br>1. स्थायी बंदोबस्त ब्रिटिश भारत के 19% भू-भाग पर लागू था।<br>2. रैयतवाड़ी व्यवस्था ब्रिटिश भारत के लगभग 51% भू-भाग पर लागू की गई थी।", qEn: "Which is correct regarding land revenue coverage?<br>1. Permanent Settlement covered 19% of British India.<br>2. Ryotwari covered ~51% of British India.", optsHi: ["1 और 2 दोनों", "केवल 2", "केवल 1", "इनमें से कोई नहीं"], optsEn: ["Both 1 and 2", "Only 2", "Only 1", "None of these"], ans: 0, expHi: "स्थायी बंदोबस्त ब्रिटिश भारत के 19 प्रतिशत क्षेत्र पर, रैयतवाड़ी 51 प्रतिशत पर और महालवाड़ी 30 प्रतिशत क्षेत्र पर लागू थी।", expEn: "Permanent Settlement covered 19%, Ryotwari 51%, and Mahalwari 30% of British India." },
+            { id: 13, qHi: "रैयतवाड़ी व्यवस्था में भूमि का वास्तविक स्वामी किसे स्वीकार किया गया था?", qEn: "Who was recognized as the actual owner of land under the Ryotwari system?", optsHi: ["ब्रिटिश क्राउन को", "जमींदार को", "पंजीकृत किसान (रैयत) को", "ग्राम पंचायत को"], optsEn: ["British Crown", "Zamindar", "Registered Farmer (Ryot)", "Gram Panchayat"], ans: 2, expHi: "रैयतवाड़ी व्यवस्था में प्रत्येक पंजीकृत किसान को भूमि का स्वामी माना गया और सरकार ने उससे सीधे कर का अनुबंध किया।", expEn: "Each registered farmer was accepted as land owner with direct contract with the government." },
+            { id: 14, qHi: "ब्रिटिश भारत में भू-राजस्व प्रणालियों के लागू होने का सही क्रम कौन-सा है?", qEn: "What is the correct order of implementation of land revenue systems in British India?", optsHi: ["रैयतवाड़ी प्रणाली → महालवाड़ी प्रणाली → स्थायी बंदोबस्त", "स्थायी बंदोबस्त → महालवाड़ी प्रणाली → रैयतवाड़ी प्रणाली", "महालवाड़ी प्रणाली → स्थायी बंदोबस्त → रैयतवाड़ी प्रणाली", "स्थायी बंदोबस्त → रैयतवाड़ी प्रणाली → महालवाड़ी प्रणाली"], optsEn: ["Ryotwari → Mahalwari → Permanent Settlement", "Permanent Settlement → Mahalwari → Ryotwari", "Mahalwari → Permanent Settlement → Ryotwari", "Permanent Settlement → Ryotwari → Mahalwari"], ans: 3, expHi: "ब्रिटिश भारत में स्थायी बंदोबस्त 1793 में, रैयतवाड़ी प्रणाली प्रायोगिक तौर पर 1792 व विधिवत 1820 में तथा महालवाड़ी 1822 में लागू हुई।", expEn: "Permanent Settlement implemented in 1793, Ryotwari in 1792/1820, and Mahalwari in 1822." },
+            { id: 15, qHi: "निम्नलिखित में से कौन-सा क्रम रैयतवाड़ी व्यवस्था के प्रांतीय विस्तार की प्रक्रिया से सबसे अधिक संबंधित है?", qEn: "Which sequence correctly reflects provincial expansion of Ryotwari System?", optsHi: ["असम → मद्रास → बंबई", "बंबई प्रेसीडेंसी → मद्रास → बंगाल", "बंगाल → बिहार → मद्रास", "मद्रास (बारामहल) → बंबई प्रेसीडेंसी → असम एवं कुर्ग"], optsEn: ["Assam → Madras → Bombay", "Bombay → Madras → Bengal", "Bengal → Bihar → Madras", "Madras (Baramahal) → Bombay → Assam & Coorg"], ans: 3, expHi: "रैयतवाड़ी व्यवस्था सर्वप्रथम मद्रास के बारामहल जिले में लागू हुई, फिर बंबई प्रेसीडेंसी में फैली और अंत में असम व कुर्ग तक विस्तारित हुई।", expEn: "Started in Baramahal (Madras), then expanded to Bombay Presidency, Assam, and Coorg." },
+            { id: 16, qHi: "भू-राजस्व व्यवस्थाओं के उपनामों के संदर्भ में कौन-सा युग्म असुमेलित है?", qEn: "Which pair is mismatched regarding alternative names of revenue systems?", optsHi: ["स्थायी बंदोबस्त - इस्तमरारी / जागीरदारी / मालगुजारी बंदोबस्त", "महालवाड़ी - ग्राम्य बंदोबस्त", "इजारेदारी - सहकारी कृषि बंदोबस्त", "रैयतवाड़ी - किसान बंदोबस्त"], optsEn: ["Permanent Settlement - Istamrari / Jagirdari / Malguzari", "Mahalwari - Village Settlement", "Izaredari - Cooperative Farming Settlement", "Ryotwari - Peasant Settlement"], ans: 2, expHi: "इजारेदारी व्यवस्था नीलामी या ठेकेदारी आधारित लगान वसूली प्रथा थी, इसका सहकारी कृषि से कोई संबंध नहीं था।", expEn: "Izaredari was revenue farming via auctions; it had no relation to cooperative farming." },
+            { id: 17, qHi: "19वीं शताब्दी के अंत में ब्रिटिश भारत में बार-बार पड़ने वाले भीषण अकालों का प्राथमिक कारण क्या था?", qEn: "What was the primary cause of frequent severe famines in late 19th-century British India?", optsHi: ["भारत में बीजों की पूर्ण अनुपलब्धता", "अत्यधिक उच्च भू-राजस्व दरें, खाद्यान्नों का निर्यात और किसानों की क्रय शक्ति का पूर्ण हास", "किसानों द्वारा खेतों में काम करने से मना करना", "केवल भारत में कभी वर्षा न होना"], optsEn: ["Complete absence of seeds in India", "Extremely high revenue rates, foodgrain exports, and complete loss of purchasing power", "Farmers refusing to work", "Total absence of rainfall"], ans: 1, expHi: "आर. सी. दत्त के अनुसार अकाल खाद्यान्न की पूर्ण कमी से नहीं बल्कि भारी लगान और दरिद्रता के कारण भोजन खरीदने की क्षमता खोने से हुए।", expEn: "According to R.C. Dutt, famines resulted from loss of purchasing power due to high revenue and poverty." },
+            { id: 18, qHi: "भारतीय कृषि के वाणिज्यीकरण के अंतर्गत ब्रिटिश काल में उगाई जाने वाली प्रमुख नकदी फसलों का सही क्रम कौन-सा है?", qEn: "Which sequence correctly lists major cash crops forced during commercialisation of agriculture?", optsHi: ["बाजरा → सरसों → गेहूं → कपास", "नील → अफीम → कपास → चाय व जूट", "चाय → गेहूं → धान → बाजरा", "मक्का → ज्वार → दालें → नील"], optsEn: ["Millet → Mustard → Wheat → Cotton", "Indigo → Opium → Cotton → Tea & Jute", "Tea → Wheat → Paddy → Millet", "Maize → Sorghum → Pulses → Indigo"], ans: 1, expHi: "ब्रिटिश औपनिवेशिक हितों के अनुरूप किसानों को खाद्यान्नों के बजाय नील, अफीम, कपास, चाय और जूट उगाने के लिए विवश किया गया।", expEn: "British interests forced cultivation of cash crops like Indigo, Opium, Cotton, Tea, and Jute." },
+            { id: 19, qHi: "कथन (A): रैयतवाड़ी व्यवस्था में किसानों का उत्पीड़न साहूकारों और महाजनों द्वारा बढ़ गया था।<br>कारण (R): लगान की दर अत्यधिक उच्च थी और अकाल के समय भी नकद लगान अनिवार्य था।", qEn: "Assertion (A): Exploitation by moneylenders increased under Ryotwari.<br>Reason (R): Revenue rate was excessively high and mandatory in cash even during famines.", optsHi: ["A गलत हैं किंतु R सही हैं", "A सही हैं किंतु R गलत हैं", "A और R दोनों सही हैं और R, A का सही स्पष्टीकरण हैं", "A और R दोनों सही हैं और R, A का सही स्पष्टीकरण नहीं हैं"], optsEn: ["A is false, R is true", "A is true, R is false", "Both A & R are true, R is correct explanation of A", "Both A & R are true, R is not correct explanation"], ans: 2, expHi: "अत्यधिक लगान और नकद अदायगी की अनिवार्यता के कारण किसान महाजनों के चंगुल में फंस गए, जिससे उनका भारी आर्थिक शोषण हुआ।", expEn: "High rates and cash payment compulsion trapped peasants in moneylender debts." },
+            { id: 20, qHi: "निम्नलिखित में से कौन-सा क्रम दक्कन के कृषक दंगों (1875) के कारणों से सबसे अधिक संबंधित है?", qEn: "Which sequence best represents the chain of events leading to Deccan Riots (1875)?", optsHi: ["दंगे → साहूकारों का समर्थन → कपास के दाम बढ़ना → लगान कमी", "अत्यधिक रैयतवाड़ी लगान → अमेरिकी गृहयुद्ध समाप्ति से कपास के दाम गिरना → मारवाड़ी साहूकारों का शोषण → दंगे", "कपास के दाम बढ़ना → दंगे → साहूकारों का निष्कासन", "साहूकारों का निष्कासन → दंगे → लगान कमी"], optsEn: ["Riots → Support to moneylenders → Cotton price rise → Revenue fall", "High Ryotwari rent → Fall in cotton prices after US Civil War → Moneylender exploitation → Riots", "Cotton price rise → Riots → Moneylender expulsion", "Moneylender expulsion → Riots → Rent reduction"], ans: 1, expHi: "अमेरिकी गृहयुद्ध के बाद कपास के भाव गिरने और भारी लगान के चलते दक्कन के किसान कर्ज में डूबे और साहूकारों के विरुद्ध दंगे हुए।", expEn: "Post-US Civil War fall in cotton prices combined with high rent led to moneylender exploitation and riots." },
+            { id: 21, qHi: "1822 के महालवाड़ी विनियमन (रेगुलेशन VII) में लगान की दर कुल उपज के कितने प्रतिशत तक तय की गई थी?", qEn: "Under the 1822 Mahalwari Regulation VII, what percentage of total produce was fixed as revenue rate?", optsHi: ["शत-प्रतिशत (100%)", "25%", "लगभग 66% से 80% तक", "केवल 10%"], optsEn: ["100%", "25%", "Around 66% to 80%", "Only 10%"], ans: 2, expHi: "1822 के नियम में लगान की मांग अत्यधिक कठोर (उपज के 66% से 80% तक) थी, जिसे बाद में बेंटिक ने 1833 में घटाकर 66% किया।", expEn: "The 1822 regulation set harsh revenue demand at 66% to 80% of total produce." },
+            { id: 22, qHi: "कथन (A): स्थायी बंदोबस्त के कारण ब्रिटिश सरकार को कृषि के बढ़ते उत्पादन से कोई वित्तीय लाभ नहीं मिला।<br>कारण (R): इस व्यवस्था में कंपनी का राजस्व हमेशा के लिए निश्चित कर दिया गया था।", qEn: "Assertion (A): British government gained no extra financial benefit from increased agricultural output under Permanent Settlement.<br>Reason (R): Company's revenue was permanently fixed in this system.", optsHi: ["(A) गलत है, परंतु (R) सही है।", "(A) सही है, परंतु (R) गलत है।", "(A) और (R) दोनों सही हैं, परंतु (R), (A) की सही व्याख्या नहीं करता है।", "(A) और (R) दोनों सही हैं तथा (R), (A) की सही व्याख्या करता है।"], optsEn: ["A is false, R is true", "A is true, R is false", "Both A & R are true, R is not correct explanation", "Both A & R are correct, and R correctly explains A"], ans: 3, expHi: "कंपनी की आय हमेशा के लिए तय हो गई थी, जिससे कृषि विस्तार और मूल्य वृद्धि का सारा लाभ जमींदारों को मिला, सरकार को नहीं।", expEn: "Revenue was fixed permanently, so agricultural growth profits went to zamindars rather than state." },
+            { id: 23, qHi: "उत्तर भारत में भू-राजस्व व्यवस्था का जनक (प्रवर्तक) किसे माना जाता है?", qEn: "Who is considered the father/originator of land revenue system in Northern India?", optsHi: ["जॉन शोर", "थॉमस मुनरो", "लॉर्ड कॉर्नवालिस", "मार्टिन बर्ड (रॉबर्ट मार्टिन्स बर्ड)"], optsEn: ["John Shore", "Thomas Munro", "Lord Cornwallis", "Merttins Bird (Robert Merttins Bird)"], ans: 3, expHi: "रॉबर्ट मार्टिन्स बर्ड को उत्तर भारत में भू-राजस्व व्यवस्था का प्रवर्तक माना जाता है, जिन्होंने महालवाड़ी को व्यवस्थित रूप दिया।", expEn: "Robert Merttins Bird is hailed as father of land revenue settlement in Northern India." },
+            { id: 24, qHi: "महालवाड़ी व्यवस्था ब्रिटिश भारत के कुल क्षेत्रफल के कितने प्रतिशत हिस्से पर लागू की गई थी?", qEn: "What percentage of British India's total area was covered under Mahalwari system?", optsHi: ["30% भू-भाग पर", "19% भू-भाग पर", "10% भू-भाग पर", "51% भू-भाग पर"], optsEn: ["30% Area", "19% Area", "10% Area", "51% Area"], ans: 0, expHi: "महालवाड़ी व्यवस्था ब्रिटिश भारत के लगभग 30 प्रतिशत क्षेत्र (गंगा घाटी, उत्तर-पश्चिम प्रांत, मध्य प्रांत और पंजाब) पर लागू थी।", expEn: "Mahalwari system covered ~30% area including Gangetic Valley, NW Province, Central Province, Punjab." },
+            { id: 25, qHi: "1792 ई. में मद्रास के बारामहल जिले में रैयतवाड़ी व्यवस्था को प्रायोगिक तौर पर सर्वप्रथम किसने लागू किया था?", qEn: "Who first introduced Ryotwari system on experimental basis in Baramahal district in 1792?", optsHi: ["जॉन शोर", "कैप्टन अलेक्जेंडर रीड", "थॉमस मुनरो", "लॉर्ड कॉर्नवालिस"], optsEn: ["John Shore", "Captain Alexander Read", "Thomas Munro", "Lord Cornwallis"], ans: 1, expHi: "कैप्टन अलेक्जेंडर रीड ने टीपू सुल्तान से छीने गए बारामहल क्षेत्र में 1792 में सर्वप्रथम रैयतवाड़ी व्यवस्था का प्रयोग किया था।", expEn: "Captain Alexander Read experimented with Ryotwari in Baramahal in 1792." },
+            { id: 26, qHi: "1793 के कॉर्नवालिस कोड द्वारा न्याय और राजस्व प्रशासन में क्या बुनियादी परिवर्तन किया गया?", qEn: "What fundamental reform was introduced in judicial and revenue administration by Cornwallis Code 1793?", optsHi: ["जमींदारों को फांसी देने का अधिकार दे दिया गया।", "कलेक्टर को सेना का प्रधान बना दिया गया।", "सभी अदालतों को बंद कर दिया गया।", "कलेक्टर से न्यायिक शक्तियां छीनकर उसे केवल कर संग्रह तक सीमित किया गया तथा दीवानी जज का पद अलग बना।"], optsEn: ["Zamindars were given power to inflict death penalty", "Collector made head of army", "All courts were shut down", "Judicial powers stripped from Collector limiting him to tax collection, creating separate Civil Judge post"], ans: 3, expHi: "शक्ति पृथक्करण के तहत कलेक्टर से न्याय व पुलिस की शक्तियां लेकर जिला दीवानी अदालतों में जज का नया पद बनाया गया।", expEn: "Separation of powers stripped judicial functions from Collectors and created District Civil Judges." },
+            { id: 27, qHi: "भू-राजस्व व्यवस्थाओं और संबंधित प्रमुख विशेषताओं का सही मिलान कीजिए:<br>(A) स्थायी बंदोबस्त (B) रैयतवाड़ी (C) महालवाड़ी<br>विशेषताएं: 1. किसान से प्रत्यक्ष अनुबंध, 2. ग्राम प्रधान / लंबरदार द्वारा वसूली, 3. जमींदार को भू-स्वामी मानना", qEn: "Match Systems with Features:<br>(A) Permanent Settlement (B) Ryotwari (C) Mahalwari<br>1. Direct agreement with peasant, 2. Collection by Village Lambardar, 3. Landlord as owner", optsHi: ["A-1, B-2, C-3", "A-3, B-1, C-2", "A-3, B-2, C-1", "A-2, B-3, C-1"], optsEn: ["A-1, B-2, C-3", "A-3, B-1, C-2", "A-3, B-2, C-1", "A-2, B-3, C-1"], ans: 1, expHi: "स्थायी बंदोबस्त में जमींदार मालिक था, रैयतवाड़ी में सीधे किसान से समझौता हुआ और महालवाड़ी में लंबरदार सामूहिक वसूली करता था।", expEn: "Permanent = Zamindar owner; Ryotwari = Direct farmer contract; Mahalwari = Lambardar collection." },
+            { id: 28, qHi: "भू-राजस्व नीतियों और वायसराय / गवर्नर जनरलों के संदर्भ में कौन-सा युग्म असुमेलित है?", qEn: "Which pair is mismatched regarding land revenue policies and Governors-General?", optsHi: ["महालवाड़ी का पुनरीक्षण - लॉर्ड विलियम बेंटिक", "रैयतवाड़ी का समर्थन - थॉमस मुनरो", "स्थायी बंदोबस्त का विस्तार दक्षिण भारत में - लॉर्ड डलहौजी", "स्थायी बंदोबस्त - लॉर्ड कॉर्नवालिस"], optsEn: ["Mahalwari Revision - Lord William Bentinck", "Support to Ryotwari - Thomas Munro", "Extension of Permanent Settlement to South India - Lord Dalhousie", "Permanent Settlement - Lord Cornwallis"], ans: 2, expHi: "दक्षिण भारत में मुख्य रूप से रैयतवाड़ी व्यवस्था लागू की गई थी, स्थायी बंदोबस्त का विस्तार वहां डलहौजी ने नहीं किया था।", expEn: "Ryotwari was dominant in South India; Dalhousie did not extend Permanent Settlement there." },
+            { id: 29, qHi: "स्थायी बंदोबस्त के कानूनी प्रावधानों के संदर्भ में कौन सही है?<br>1. यह व्यवस्था प्रारंभ में 1790 में 10 वर्षीय व्यवस्था के रूप में शुरू की गई थी।<br>2. 1793 में इसे स्थायी व्यवस्था में बदल दिया गया।", qEn: "Which is correct regarding legal provisions of Permanent Settlement?<br>1. Initially launched in 1790 as 10-year settlement.<br>2. Converted into permanent settlement in 1793.", optsHi: ["1 और 2 दोनों", "केवल 2", "इनमें से कोई नहीं", "केवल 1"], optsEn: ["Both 1 and 2", "Only 2", "None of these", "Only 1"], ans: 0, expHi: "कॉर्नवालिस ने 1790 में 10 वर्षीय व्यवस्था शुरू की थी, जिसे बोर्ड ऑफ डायरेक्टर्स की मंजूरी के बाद 1793 में स्थायी कर दिया गया।", expEn: "Cornwallis introduced 10-year plan in 1790, made permanent in 1793 upon directors' approval." },
+            { id: 30, qHi: "कथन (A): रैयतवाड़ी व्यवस्था में सरकार स्वयं जमींदार की भूमिका में आ गई थी।<br>कारण (R): सरकार ने बिचौलियों (जमींदारों) को हटाकर सीधे किसानों से भारी कर वसूलना शुरू किया था।", qEn: "Assertion (A): Government itself acted as landlord in Ryotwari system.<br>Reason (R): Government eliminated intermediaries and directly extracted high taxes from peasants.", optsHi: ["A और R दोनों सही हैं और R, A का सही स्पष्टीकरण हैं", "A और R दोनों सही हैं और R, A का सही स्पष्टीकरण नहीं हैं", "A सही हैं किंतु R गलत हैं", "A गलत हैं किंतु R सही हैं"], optsEn: ["Both A & R are true, R is correct explanation of A", "Both A & R are true, R is not correct explanation", "A is true, R is false", "A is false, R is true"], ans: 0, expHi: "बिचौलियों को समाप्त करने के बावजूद कंपनी ने स्वयं विशाल जमींदार बनकर किसानों पर अत्यधिक कर लगाया और वसूली में सख्ती बरती।", expEn: "By removing zamindars, company itself became giant landlord levying exorbitant direct taxes." },
+            { id: 31, qHi: "महालवाड़ी व्यवस्था के प्रवर्तकों और क्षेत्रों का सही मिलान पहचानिए:<br>(i) होल्ट मैकेंजी -> उत्तर-पश्चिम प्रांत एवं पंजाब<br>(ii) थॉमस मुनरो -> मद्रास प्रेसीडेंसी", qEn: "Identify correct match of architects and regions:<br>(i) Holt Mackenzie -> NW Province & Punjab<br>(ii) Thomas Munro -> Madras Presidency", optsHi: ["इनमें से कोई नहीं", "केवल 2", "केवल 1", "1 और 2 दोनों"], optsEn: ["None of these", "Only 2", "Only 1", "Both 1 and 2"], ans: 3, expHi: "हॉल्ट मैकेंजी ने उत्तर-पश्चिम प्रांत में महालवाड़ी की रूपरेखा बनाई, जबकि थॉमस मुनरो ने मद्रास में रैयतवाड़ी व्यवस्था को स्थापित किया।", expEn: "Holt Mackenzie structured Mahalwari in NW Province/Punjab; Munro established Ryotwari in Madras." },
+            { id: 32, qHi: "कथन (A): ब्रिटिश भू-राजस्व नीतियों ने भारतीय ग्रामीण अर्थव्यवस्था के पारंपरिक ताने-बाने को नष्ट कर दिया।<br>कारण (R): भूमि को हस्तांतरणीय और बिक्री योग्य वस्तु बना दिया गया जिससे कृषि का वाणिज्यीकरण और ऋणग्रस्तता बढ़ी।", qEn: "Assertion (A): British land revenue policies ruined traditional fabric of Indian rural economy.<br>Reason (R): Land was made transferable commodity, spurring commercialisation and indebtedness.", optsHi: ["(A) और (R) दोनों सही हैं, परंतु (R), (A) की सही व्याख्या नहीं करता है।", "(A) गलत है, परंतु (R) सही है।", "(A) और (R) दोनों सही हैं तथा (R), (A) की सही व्याख्या करता है।", "(A) सही है, परंतु (R) गलत है।"], optsEn: ["Both A & R are correct, but R does not explain A", "A is false, R is true", "Both A & R are correct, and R correctly explains A", "A is true, R is false"], ans: 2, expHi: "भूमि को क्रय-विक्रय योग्य वस्तु बनाने और अत्यधिक नकद लगान थोपने से पारंपरिक ग्राम समुदाय टूटा और किसान कर्ज में डूब गए।", expEn: "Treating land as saleable commodity and enforcing cash taxes broke rural self-sufficiency and caused debts." },
+            { id: 33, qHi: "कौन-सा कथन सही है?", qEn: "Which statement is correct?", optsHi: ["जेम्स ग्रांट ने जमींदारों को कर से पूर्ण छूट देने का प्रस्ताव दिया था।", "जॉन शोर ने स्थायी बंदोबस्त में जमींदारों को भूमि का स्वामी मानने की वकालत की थी जबकि जेम्स ग्रांट इसके विरोधी थे।", "जॉन शोर ने केवल एक वर्ष के लिए कर लगाने का सुझाव दिया था।", "कॉर्नवालिस ने किसानों को भूमि का स्वामी घोषित किया था।"], optsEn: ["James Grant proposed total tax exemption for landlords", "John Shore advocated treating zamindars as land owners while James Grant opposed it", "John Shore suggested annual tax assessment", "Cornwallis declared peasants as land owners"], ans: 1, expHi: "जॉन शोर का मानना था कि जमींदार ही पारंपरिक रूप से भूमि के मालिक हैं, जबकि जेम्स ग्रांट सारी भूमि को राज्य की मानते थे।", expEn: "John Shore held zamindars as traditional land owners; James Grant viewed all land as state property." },
+            { id: 34, qHi: "ब्रिटिश काल में अनुपस्थित जमींदारी (एब्सेंटी लैंडलॉर्डिज्म) किस भू-राजस्व व्यवस्था का मुख्य दुष्परिणाम थी?", qEn: "Absentee Landlordism was a major evil outcome of which land revenue system during British rule?", optsHi: ["महालवाड़ी व्यवस्था", "तालुकेदारी व्यवस्था", "स्थायी बंदोबस्त", "रैयतवाड़ी व्यवस्था"], optsEn: ["Mahalwari System", "Talukdari System", "Permanent Settlement", "Ryotwari System"], ans: 2, expHi: "स्थायी बंदोबस्त में जमींदार गांवों को छोड़कर शहरों में विलासिता का जीवन बिताने लगे और बिचौलियों के जरिए किसानों का शोषण बढ़ा।", expEn: "Permanent Settlement led zamindars to live in luxury in cities while sub-agents exploited peasants." },
+            { id: 35, qHi: "स्थायी बंदोबस्त के अंतर्गत जमींदारों द्वारा तय किए गए सरकारी राजस्व और उनके हिस्से का सही अनुपात क्या था?", qEn: "What was the exact share ratio between Company and Zamindar under Permanent Settlement?", optsHi: ["10/11 भाग कंपनी का तथा 1/11 भाग जमींदार का", "9/10 भाग कंपनी का तथा 1/10 भाग किसान का", "4/5 भाग कंपनी का तथा 1/5 भाग जमींदार का", "1/2 भाग कंपनी का तथा 1/2 भाग जमींदार का"], optsEn: ["10/11 Share to Company & 1/11 to Zamindar", "9/10 Share to Company & 1/10 to Peasant", "4/5 Share to Company & 1/5 to Zamindar", "1/2 Share to Company & 1/2 to Zamindar"], ans: 0, expHi: "स्थायी बंदोबस्त में किसानों से वसूले गए कुल लगान का 10/11 भाग ईस्ट इंडिया कंपनी को और 1/11 भाग जमींदारों को मिलना तय था।", expEn: "Of total collected rent, 10/11 went to East India Company and 1/11 was retained by Zamindars." },
+            { id: 36, qHi: "निम्न में से कौन-सा युग्म सही है?", qEn: "Which of the following pairs is correctly matched?", optsHi: ["रैयतवाड़ी व्यवस्था - लॉर्ड विलियम बेंटिक", "महालवाड़ी व्यवस्था - रॉबर्ट क्लाइव", "इजारेदारी प्रथा - लॉर्ड डलहौजी", "स्थायी बंदोबस्त - लॉर्ड कॉर्नवालिस (1793 ई.)"], optsEn: ["Ryotwari System - Lord William Bentinck", "Mahalwari System - Robert Clive", "Izaredari System - Lord Dalhousie", "Permanent Settlement - Lord Cornwallis (1793 AD)"], ans: 3, expHi: "लॉर्ड कॉर्नवालिस ने 1793 में बंगाल, बिहार और उड़ीसा में स्थायी बंदोबस्त (इस्तमरारी) की शुरुआत की थी।", expEn: "Lord Cornwallis introduced Permanent Settlement in Bengal, Bihar, and Orissa in 1793." },
+            { id: 37, qHi: "'सूर्यास्त कानून' (सनसेट लॉ) किस भू-राजस्व व्यवस्था से संबंधित था?", qEn: "Which land revenue system was associated with the 'Sunset Law'?", optsHi: ["स्थायी बंदोबस्त (इस्तमरारी)", "महालवाड़ी व्यवस्था", "इजारेदारी व्यवस्था", "रैयतवाड़ी व्यवस्था"], optsEn: ["Permanent Settlement (Istamrari)", "Mahalwari System", "Izaredari System", "Ryotwari System"], ans: 0, expHi: "1794 के सूर्यास्त कानून के तहत यदि जमींदार तय तिथि के सूर्यास्त तक लगान नहीं चुकाता था, तो उसकी जमींदारी नीलाम कर दी जाती थी।", expEn: "Under 1794 Sunset Law, failure to pay revenue by sunset of designated date led to zamindari auction." },
+            { id: 38, qHi: "1833 के महालवाड़ी सुधारों के तहत खेतों के नक्शे और रजिस्टरों का प्रयोग शुरू करने वाले प्रमुख अधिकारी कौन थे?", qEn: "Who was the chief official behind introducing land maps and registers under 1833 Mahalwari reforms?", optsHi: ["चार्ल्स ग्रांट", "जॉन मालकम", "लॉर्ड वेलेजली", "रॉबर्ट मार्टिन्स बर्ड"], optsEn: ["Charles Grant", "John Malcolm", "Lord Wellesley", "Robert Merttins Bird"], ans: 3, expHi: "मार्टिन बर्ड ने 1833 के विनियमन के बाद भूमि की पैमाइश, सीमांकन, नक्शे और अधिकार अभिलेखों का वैज्ञानिक उपयोग शुरू कराया।", expEn: "Robert Merttins Bird introduced scientific land surveys, maps, and registers after 1833 regulation." },
+            { id: 39, qHi: "रैयतवाड़ी व्यवस्था में सामान्यतः भू-राजस्व की दर उत्पादन के कितने हिस्से के बराबर रखी गई थी?", qEn: "Generally, what fraction of total production was fixed as land revenue in Ryotwari system?", optsHi: ["पांच प्रतिशत (5%)", "एक-तिहाई (1/3) से लेकर आधे (1/2) तक", "केवल दसवां हिस्सा (1/10)", "नब्बे प्रतिशत (90%)"], optsEn: ["5%", "1/3rd to 1/2 (50%)", "1/10th only", "90%"], ans: 1, expHi: "रैयतवाड़ी में लगान की दर अत्यधिक ऊंची थी, जो सिंचित और असिंचित भूमि के आधार पर कुल उपज के 1/3 से लेकर 1/2 (50%) तक थी।", expEn: "Ryotwari revenue was very high, ranging from 1/3rd to 1/2 of produce based on soil type." },
+            { id: 40, qHi: "निम्नलिखित में से कौन-सा युग्म गलत है?", qEn: "Which of the following pairs is incorrect?", optsHi: ["इजारेदारी प्रथा - सिंध और कश्मीर", "स्थायी बंदोबस्त - बंगाल, बिहार, उड़ीसा", "रैयतवाड़ी व्यवस्था - मद्रास, बंबई, असम", "महालवाड़ी व्यवस्था - उत्तर-पश्चिम प्रांत, मध्य प्रांत, पंजाब"], optsEn: ["Izaredari System - Sindh & Kashmir", "Permanent Settlement - Bengal, Bihar, Orissa", "Ryotwari System - Madras, Bombay, Assam", "Mahalwari System - NW Province, Central Province, Punjab"], ans: 0, expHi: "इजारेदारी प्रथा वारेन हेस्टिंग्स द्वारा 1772 में बंगाल में शुरू की गई थी, सिंध और कश्मीर में नहीं।", expEn: "Izaredari farming system was started by Warren Hastings in Bengal in 1772, not Sindh or Kashmir." },
+            { id: 41, qHi: "ब्रिटिश भू-राजस्व नीतियों के कारण भारत में किस वर्ग का सर्वाधिक आर्थिक पतन और ऋणग्रस्तता हुई?", qEn: "Which class suffered maximum economic ruin and indebtedness due to British land revenue policies?", optsHi: ["लघु कृषक एवं खेतिहर मजदूर", "साहूकार एवं महाजन", "रेलवे ठेकेदार", "ब्रिटिश बागान मालिक"], optsEn: ["Small farmers & agricultural laborers", "Moneylenders & Mahajans", "Railway contractors", "British plantation owners"], ans: 0, expHi: "अत्यधिक लगान, कठोर वसूली और बाजार के उतार-चढ़ाव के कारण छोटे किसान अपनी जमीनें खोकर खेतिहर मजदूर और बंधुआ बन गए।", expEn: "Heavy revenue demands and rigid collection turned small peasants into landless laborers and debtors." },
+            { id: 42, qHi: "क्षेत्रों और वहां लागू भू-राजस्व व्यवस्थाओं का सही मिलान कीजिए:<br>(A) बनारस का क्षेत्र (B) कुर्ग और असम (C) पंजाब और अवध<br>व्यवस्था: 1. महालवाड़ी व्यवस्था, 2. स्थायी बंदोबस्त, 3. रैयतवाड़ी व्यवस्था", qEn: "Match Regions with Revenue Systems:<br>(A) Benares Region (B) Coorg & Assam (C) Punjab & Oudh<br>1. Mahalwari, 2. Permanent Settlement, 3. Ryotwari", optsHi: ["A-2, B-1, C-3", "A-1, B-2, C-3", "A-2, B-3, C-1", "A-3, B-1, C-2"], optsEn: ["A-2, B-1, C-3", "A-1, B-2, C-3", "A-2, B-3, C-1", "A-3, B-1, C-2"], ans: 2, expHi: "बनारस में स्थायी बंदोबस्त लागू था, असम व कुर्ग में रैयतवाड़ी और पंजाब व अवध के क्षेत्रों में महालवाड़ी व्यवस्था थी।", expEn: "Benares = Permanent Settlement; Coorg/Assam = Ryotwari; Punjab/Oudh = Mahalwari." },
+            { id: 43, qHi: "निम्न में से कौन-सा युग्म सही है?", qEn: "Which of the following pairs is correctly matched?", optsHi: ["बंगाल काश्तकारी अधिनियम - 1793 ई.", "सूर्यास्त कानून - 1885 ई.", "अवध मालगुजारी कानून - 1801 ई.", "दक्कन कृषक राहत अधिनियम (दक्कन एग्रीकल्चरिस्ट्स रिलीफ एक्ट) - 1879 ई."], optsEn: ["Bengal Tenancy Act - 1793 AD", "Sunset Law - 1885 AD", "Oudh Rent Act - 1801 AD", "Deccan Agriculturists Relief Act - 1879 AD"], ans: 3, expHi: "1875 के दक्कन उपद्रवों की जांच के बाद ब्रिटिश सरकार ने किसानों को राहत देने हेतु 1879 में यह अधिनियम पारित किया था।", expEn: "The Deccan Agriculturists Relief Act was passed in 1879 following the 1875 peasant riots." },
+            { id: 44, qHi: "अधिकारियों और उनकी व्यवस्थाओं का सही मिलान पहचानिए:<br>(i) थॉमस मुनरो -> रैयतवाड़ी व्यवस्था<br>(ii) हॉल्ट मैकेंजी -> महालवाड़ी व्यवस्था", qEn: "Identify correct match of administrators:<br>(i) Thomas Munro -> Ryotwari System<br>(ii) Holt Mackenzie -> Mahalwari System", optsHi: ["इनमें से कोई नहीं", "केवल 1", "1 और 2 दोनों", "केवल 2"], optsEn: ["None of these", "Only 1", "Both 1 and 2", "Only 2"], ans: 2, expHi: "थॉमस मुनरो रैयतवाड़ी के मुख्य समर्थक व लागूकर्ता थे और हॉल्ट मैकेंजी ने महालवाड़ी व्यवस्था की बुनियादी रूपरेखा प्रस्तुत की थी।", expEn: "Thomas Munro championed Ryotwari; Holt Mackenzie designed the Mahalwari framework." },
+            { id: 45, qHi: "महालवाड़ी व्यवस्था में राजस्व वसूली की प्राथमिक इकाई क्या थी?", qEn: "What was the primary unit of revenue collection in Mahalwari system?", optsHi: ["महाल (समस्त गांव या ग्राम समुदाय)", "वंशानुगत जमींदार", "व्यक्तिगत किसान (रैयत)", "तालुकदार"], optsEn: ["Mahal (Entire village community)", "Hereditary Zamindar", "Individual Peasant (Ryot)", "Talukdar"], ans: 0, expHi: "महालवाड़ी व्यवस्था में राजस्व का निर्धारण और संग्रहण पूरे गांव या महाल के आधार पर ग्राम समुदाय की सामूहिक जिम्मेदारी थी।", expEn: "Collection unit was the Mahal (entire village or body of villages collectively)." },
+            { id: 46, qHi: "स्थायी बंदोबस्त सर्वप्रथम 1793 में किस प्रांत में लागू किया गया था?", qEn: "In which province was Permanent Settlement first introduced in 1793?", optsHi: ["पंजाब प्रांत में", "संयुक्त प्रांत में", "बंगाल प्रांत में", "बंबई प्रांत में"], optsEn: ["Punjab Province", "United Province", "Bengal Province", "Bombay Province"], ans: 2, expHi: "लॉर्ड कॉर्नवालिस ने स्थायी बंदोबस्त को सबसे पहले 1793 में बंगाल, बिहार और उड़ीसा प्रांतों में लागू किया था।", expEn: "Lord Cornwallis first enforced Permanent Settlement in Bengal, Bihar, and Orissa in 1793." },
+            { id: 47, qHi: "निम्न में से कौन-सा युग्म सही है?", qEn: "Which pair is correctly matched?", optsHi: ["स्थायी बंदोबस्त - 1833 ई.", "सूर्यास्त कानून - 1858 ई.", "महालवाड़ी व्यवस्था - 1822 ई. (रेगुलेशन 7)", "रैयतवाड़ी व्यवस्था - 1765 ई."], optsEn: ["Permanent Settlement - 1833 AD", "Sunset Law - 1858 AD", "Mahalwari System - 1822 AD (Regulation VII)", "Ryotwari System - 1765 AD"], ans: 2, expHi: "महालवाड़ी व्यवस्था को कानूनी रूप से 1822 के रेगुलेशन VII द्वारा हॉल्ट मैकेंजी की सिफारिशों पर लागू किया गया था।", expEn: "Mahalwari was given legal effect by Regulation VII of 1822 based on Holt Mackenzie's report." },
+            { id: 48, qHi: "स्थायी बंदोबस्त के लागू होने के प्रशासनिक चरणों को कालानुक्रम व्यवस्थित कीजिए:<br>1. 1772 की पंचवर्षीय इजारेदारी<br>2. 1777 की एकवर्षीय नीलामी<br>3. 1790 का दस वर्षीय बंदोबस्त<br>4. 1793 का स्थायी बंदोबस्त", qEn: "Arrange administrative stages leading to Permanent Settlement chronologically:<br>1. 5-Year Izaredari (1772)<br>2. 1-Year Auction (1777)<br>3. 10-Year Settlement (1790)<br>4. Permanent Settlement (1793)", optsHi: ["1, 2, 3, 4", "2, 1, 4, 3", "4, 3, 2, 1", "1, 3, 2, 4"], optsEn: ["1, 2, 3, 4", "2, 1, 4, 3", "4, 3, 2, 1", "1, 3, 2, 4"], ans: 0, expHi: "बंगाल में पहले 1772 में पंचवर्षीय इजारेदारी, 1777 में एकवर्षीय बंदोबस्त, 1790 में दस वर्षीय और 1793 में स्थायी बंदोबस्त बना।", expEn: "Stages followed sequence: 1772 (5-yr) -> 1777 (1-yr) -> 1790 (10-yr) -> 1793 (Permanent)." },
+            { id: 49, qHi: "बंबई प्रेसीडेंसी में रैयतवाड़ी व्यवस्था को सर्वेक्षण के आधार पर व्यवस्थित करने का श्रेय किसे दिया जाता है?", qEn: "Who is credited with organising Ryotwari system based on survey in Bombay Presidency?", optsHi: ["लॉर्ड कॉर्नवालिस", "रॉबर्ट बर्ड", "वॉरेन हेस्टिंग्स", "एलफिंस्टन और प्रिंगल"], optsEn: ["Lord Cornwallis", "Robert Bird", "Warren Hastings", "Elphinstone and Pringle"], ans: 3, expHi: "माउंटस्टुआर्ट एलफिंस्टन के समय आर. के. प्रिंगल ने भूमि सर्वेक्षण किया और बाद में गोल्डस्मिड व विंगेट ने इसे संशोधित किया।", expEn: "Mountstuart Elphinstone and R.K. Pringle initiated survey-based Ryotwari in Bombay." },
+            { id: 50, qHi: "महालवाड़ी व्यवस्था के क्रमिक विकास का सही क्रम कौन-सा है?", qEn: "What is the correct sequential development of Mahalwari System?", optsHi: ["1819 की मैकेंजी रिपोर्ट → 1822 का रेगुलेशन VII → 1833 का बेंटिक सुधार (मार्टिन बर्ड योजना)", "1819 रिपोर्ट → 1833 सुधार → 1822 रेगुलेशन", "1833 का बेंटिक सुधार → 1822 रेगुलेशन → 1819 रिपोर्ट", "1822 रेगुलेशन → 1833 सुधार → 1819 रिपोर्ट"], optsEn: ["1819 Mackenzie Report → 1822 Regulation VII → 1833 Bentinck Reforms (Bird Plan)", "1819 Report → 1833 Reforms → 1822 Regulation", "1833 Bentinck Reforms → 1822 Regulation → 1819 Report", "1822 Regulation → 1833 Reforms → 1819 Report"], ans: 0, expHi: "हॉल्ट मैकेंजी की 1819 रिपोर्ट के बाद 1822 में कानून बना और 1833 में विलियम बेंटिक के काल में मार्टिन बर्ड ने इसे व्यावहारिक बनाया।", expEn: "1819 Mackenzie Report -> 1822 Regulation VII -> 1833 Bentinck reforms by Merttins Bird." }
+        ];
+
+        // GLOBAL APP STATE
+        let currentLang = 'hi'; // 'hi' or 'en'
+        let currentQIndex = 0;
+        let studentAnswers = new Array(50).fill(null);
+        let questionStates = new Array(50).fill('not-visited'); // 'not-visited', 'answered', 'not-answered', 'review'
+        let overallSecs = 3600;
+        let questionSecs = 72;
+        let overallTimerInterval, questionTimerInterval;
+        let studentDetails = { name: '', roll: '' };
+
+        // DOM ELEMENTS
+        const phase1 = document.getElementById('phase1');
+        const phase2 = document.getElementById('phase2');
+        const phase3 = document.getElementById('phase3');
+        const phase4 = document.getElementById('phase4');
+
+        // PHASE 1 EXECUTION
+        document.getElementById('entryForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            studentDetails.name = document.getElementById('studentName').value.trim();
+            studentDetails.roll = document.getElementById('rollNumber').value.trim();
+            document.getElementById('dispName').innerText = studentDetails.name;
+            document.getElementById('dispRoll').innerText = studentDetails.roll;
+            phase1.classList.add('hidden');
+            phase2.classList.remove('hidden');
+        });
+
+        // PHASE 2 EXECUTION
+        document.getElementById('startTestBtn').addEventListener('click', () => {
+            phase2.classList.add('hidden');
+            phase3.classList.remove('hidden');
+            initEngine();
+        });
+
+        // ENGINE INITIALIZATION
+        function initEngine() {
+            renderPalette();
+            loadQuestion(0);
+            startOverallTimer();
+            startQuestionTimer();
+        }
+
+        // TIMERS MECHANICS
+        function startOverallTimer() {
+            overallTimerInterval = setInterval(() => {
+                if (overallSecs <= 0) {
+                    clearInterval(overallTimerInterval);
+                    submitExam();
+                    return;
+                }
+                overallSecs--;
+                const hrs = String(Math.floor(overallSecs / 3600)).padStart(2, '0');
+                const mins = String(Math.floor((overallSecs % 3600) / 60)).padStart(2, '0');
+                const secs = String(overallSecs % 60).padStart(2, '0');
+                document.getElementById('overallTimer').innerText = `${hrs}:${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function startQuestionTimer() {
+            clearInterval(questionTimerInterval);
+            questionSecs = 72;
+            updateQTimerDisplay();
+            questionTimerInterval = setInterval(() => {
+                if (questionSecs > 0) {
+                    questionSecs--;
+                    updateQTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function updateQTimerDisplay() {
+            const mins = String(Math.floor(questionSecs / 60)).padStart(2, '0');
+            const secs = String(questionSecs % 60).padStart(2, '0');
+            document.getElementById('questionTimer').innerText = `${mins}:${secs}`;
+        }
+
+        // LOAD QUESTION VIEW
+        function loadQuestion(index) {
+            currentQIndex = index;
+            if (questionStates[index] === 'not-visited') {
+                questionStates[index] = 'not-answered';
+            }
+            startQuestionTimer();
+            renderQuestion();
+            renderPalette();
+        }
+
+        function renderQuestion() {
+            const q = rawDataset[currentQIndex];
+            document.getElementById('qIndexDisp').innerText = `Question ${currentQIndex + 1} of 50`;
+            document.getElementById('qText').innerHTML = currentLang === 'hi' ? q.qHi : q.qEn;
+            
+            const opts = currentLang === 'hi' ? q.optsHi : q.optsEn;
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            opts.forEach((optText, optIdx) => {
+                const isSelected = studentAnswers[currentQIndex] === optIdx;
+                const optDiv = document.createElement('div');
+                optDiv.className = `p-3 rounded-lg border cursor-pointer transition flex items-center space-x-3 text-sm ${isSelected ? 'border-blue-600 bg-blue-50 font-semibold' : 'border-slate-200 bg-white hover:bg-slate-50'}`;
+                optDiv.onclick = () => selectOption(optIdx);
+                
+                const badge = String.fromCharCode(65 + optIdx);
+                optDiv.innerHTML = `
+                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'}">${badge}</span>
+                    <span class="flex-1">${optText}</span>
+                `;
+                container.appendChild(optDiv);
+            });
+        }
+
+        function selectOption(optIdx) {
+            studentAnswers[currentQIndex] = optIdx;
+            questionStates[currentQIndex] = 'answered';
+            renderQuestion();
+            renderPalette();
+        }
+
+        // NAVIGATION CONTROLS
+        document.getElementById('saveNextBtn').addEventListener('click', () => {
+            if (studentAnswers[currentQIndex] === null) {
+                questionStates[currentQIndex] = 'not-answered';
+            } else if (questionStates[currentQIndex] !== 'review') {
+                questionStates[currentQIndex] = 'answered';
+            }
+            if (currentQIndex < 49) loadQuestion(currentQIndex + 1);
+            else renderPalette();
+        });
+
+        document.getElementById('markReviewBtn').addEventListener('click', () => {
+            questionStates[currentQIndex] = 'review';
+            if (currentQIndex < 49) loadQuestion(currentQIndex + 1);
+            else renderPalette();
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentQIndex > 0) loadQuestion(currentQIndex - 1);
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            studentAnswers[currentQIndex] = null;
+            questionStates[currentQIndex] = 'not-answered';
+            renderQuestion();
+            renderPalette();
+        });
+
+        // PALETTE RENDER
+        function renderPalette() {
+            const grid = document.getElementById('paletteGrid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 50; i++) {
+                const btn = document.createElement('button');
+                btn.className = `h-9 w-full rounded font-bold text-xs flex items-center justify-center transition border ${getPaletteColor(i)}`;
+                btn.innerText = i + 1;
+                btn.onclick = () => {
+                    loadQuestion(i);
+                    if (window.innerWidth < 640) toggleDrawer(false);
+                };
+                grid.appendChild(btn);
+            }
+        }
+
+        function getPaletteColor(i) {
+            const state = questionStates[i];
+            const isCurrent = i === currentQIndex;
+            let base = '';
+            if (state === 'answered') base = 'bg-green-500 text-white border-green-600';
+            else if (state === 'not-answered') base = 'bg-red-500 text-white border-red-600';
+            else if (state === 'review') base = 'bg-purple-600 text-white border-purple-700';
+            else base = 'bg-slate-200 text-slate-700 border-slate-300';
+
+            return isCurrent ? `${base} ring-2 ring-blue-900 ring-offset-1` : base;
+        }
+
+        // DRAWER TOGGLE
+        const paletteDrawer = document.getElementById('paletteDrawer');
+        document.getElementById('drawerToggleBtn').addEventListener('click', () => toggleDrawer(true));
+        document.getElementById('closeDrawerBtn').addEventListener('click', () => toggleDrawer(false));
+        function toggleDrawer(open) {
+            if (open) paletteDrawer.classList.remove('translate-x-full');
+            else paletteDrawer.classList.add('translate-x-full');
+        }
+
+        // BILINGUAL TOGGLE
+        document.getElementById('langToggleBtn').addEventListener('click', () => {
+            currentLang = currentLang === 'hi' ? 'en' : 'hi';
+            renderQuestion();
+        });
+
+        // SUBMIT TEST & SCORECARD CALCULATION
+        document.getElementById('submitTestBtn').addEventListener('click', () => {
+            if (confirm("क्या आप निश्चित रूप से परीक्षा जमा करना चाहते हैं? (Are you sure you want to submit?)")) {
+                submitExam();
+            }
+        });
+
+        function submitExam() {
+            clearInterval(overallTimerInterval);
+            clearInterval(questionTimerInterval);
+
+            phase3.classList.add('hidden');
+            phase4.classList.remove('hidden');
+
+            let correct = 0;
+            let wrong = 0;
+            studentAnswers.forEach((ans, idx) => {
+                if (ans !== null) {
+                    if (ans === rawDataset[idx].ans) correct++;
+                    else wrong++;
+                }
+            });
+
+            const score = correct;
+            const percentage = ((score / 50) * 100).toFixed(1);
+
+            document.getElementById('scoreVal').innerText = `${score} / 50`;
+            document.getElementById('correctVal').innerText = correct;
+            document.getElementById('wrongVal').innerText = wrong;
+            document.getElementById('percentVal').innerText = `${percentage}%`;
+
+            const badge = document.getElementById('statusBadge');
+            if (percentage >= 70) {
+                badge.className = "text-center py-2 rounded-lg font-bold text-sm bg-green-100 text-green-800 border border-green-300";
+                badge.innerText = "परिणाम: उत्तीर्ण (PASSED) - उत्कृष्ट प्रदर्शन!";
+            } else {
+                badge.className = "text-center py-2 rounded-lg font-bold text-sm bg-red-100 text-red-800 border border-red-300";
+                badge.innerText = "परिणाम: अनुत्तीर्ण (FAILED) - न्यूनतम 70% आवश्यक।";
+            }
+
+            renderLeaderboard(score);
+            renderDetailedSolutions();
+        }
+
+        // QUIZ LEADERBOARD GENERATOR (50 STUDENTS RANK CARD)
+        function renderLeaderboard(userScore) {
+            const tbody = document.getElementById('leaderboardBody');
+            tbody.innerHTML = '';
+
+            // Generate 49 dummy students + current user
+            const names = ["राहुल शर्मा", "अमित वर्मा", "प्रिया सिंह", "पूजा कुमारी", "विकास यादव", "नेहा गुप्ता", "रोहित कुमार", "दीपक मिश्रा", "सोनम सिंह", "मनीष महाजन", "सचिन तेंदुलकर", "सुमन रॉय", "अंजलि शर्मा", "रवि तेजा", "अभिषेक सिंह", "स्वाति पटेल", "संजय कुमार", "निधि अग्रवाल", "गौरव जोशी", "किरण बेदी"];
+            
+            let list = [];
+            list.push({ name: studentDetails.name || "Current Student", score: userScore, time: `${60 - Math.ceil(overallSecs/60)} Min` });
+
+            for (let i = 0; i < 49; i++) {
+                const randomScore = Math.floor(Math.random() * 25) + 26; // Scores between 26 and 50
+                const randomTime = `${Math.floor(Math.random() * 30) + 25} Min`;
+                const name = names[i % names.length] + " " + (i + 1);
+                list.push({ name, score: randomScore, time: randomTime });
+            }
+
+            // Sort highest to lowest
+            list.sort((a, b) => b.score - a.score);
+
+            list.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = item.name.includes(studentDetails.name) ? "bg-yellow-100 font-bold border-b" : "border-b hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="p-2.5">#${index + 1}</td>
+                    <td class="p-2.5">${item.name}</td>
+                    <td class="p-2.5 text-blue-900 font-bold">${item.score} / 50</td>
+                    <td class="p-2.5 text-slate-500">${item.time}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // SERIALWISE 1 TO 50 DETAILED SOLUTIONS RENDER
+        function renderDetailedSolutions() {
+            const container = document.getElementById('solutionsList');
+            container.innerHTML = '';
+
+            rawDataset.forEach((q, idx) => {
+                const userAns = studentAnswers[idx];
+                const isCorrect = userAns === q.ans;
+                const solDiv = document.createElement('div');
+                solDiv.className = "p-4 rounded-lg border border-slate-200 bg-slate-50 space-y-2 text-xs sm:text-sm";
+
+                let userAnsText = "उत्कृष्ट/उत्तर नहीं दिया (Not Attempted)";
+                if (userAns !== null) {
+                    userAnsText = `${String.fromCharCode(65 + userAns)}) ${q.optsHi[userAns]}`;
+                }
+
+                const correctAnsText = `${String.fromCharCode(65 + q.ans)}) ${q.optsHi[q.ans]}`;
+
+                solDiv.innerHTML = `
+                    <div class="font-bold text-slate-900 text-sm">Q${idx + 1}. ${q.qHi}</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs">
+                        <div class="${isCorrect ? 'text-green-700 font-semibold' : 'text-red-600 font-semibold'}">आपका उत्तर: ${userAnsText}</div>
+                        <div class="text-green-800 font-bold">सही उत्तर: ${correctAnsText}</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border border-slate-200 text-slate-700 mt-2">
+                        <strong class="text-blue-900">व्याख्या (Explanation):</strong> ${q.expHi}
+                    </div>
+                `;
+                container.appendChild(solDiv);
+            });
+        }
+
+        // PDF DOWNLOAD SYSTEM
+        document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+            const element = document.getElementById('pdfContent');
+            const opt = {
+                margin:       [0.3, 0.3, 0.3, 0.3],
+                filename:     `AddaGS_MockTest_Solutions_${studentDetails.roll || '1001'}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        });
+    </script>
+</body>
+</html>
